@@ -2,7 +2,7 @@ const app = require('http').createServer(handler);
 const io = require('socket.io')(app, {transports: ['polling']});
 const fs = require('fs');
 
-app.listen(8090);
+app.listen(80);
 
 function handler (req, res) {
   let filePath = req.url;
