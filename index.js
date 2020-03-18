@@ -2,7 +2,8 @@ const app = require('http').createServer(handler);
 const io = require('socket.io')(app, {transports: ['polling']});
 const fs = require('fs');
 
-app.listen(80);
+port = process.env.PORT || 8080
+app.listen(port);
 
 function handler (req, res) {
   let filePath = req.url;
@@ -38,4 +39,4 @@ io.on('connection', function (socket) {
   
 });
 
-console.log('server started at 8090')
+console.log('server started at '+ port)
