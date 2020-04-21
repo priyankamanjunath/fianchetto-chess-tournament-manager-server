@@ -10,6 +10,7 @@ addMatch = (obj, socketId) => {
         newObj[color] = socketId
         newObj["last_move"] = {}
         activeMatches[obj.matchId] = newObj
+        // console.log(activeMatches)
         return activeMatches[obj.matchId]
     }
 }
