@@ -1,6 +1,9 @@
 const app = require('http').createServer(handler);
 const io = require('socket.io')(app, {transports: ['polling']});
 const fs = require('fs');
+const active_matches = require('./controller/active_matches')
+const match_serivce = require('./services/matchService')
+
 
 port = process.env.PORT || 8080
 app.listen(port);
@@ -18,7 +21,7 @@ function handler (req, res) {
   });
 }
 
-const active_matches = require('./controller/active_matches')
+
 
 io.on('connection', function (socket) {
 
@@ -35,9 +38,17 @@ io.on('connection', function (socket) {
     io.to(re_add).emit('users:getMove', message);
     if(message.game_stats.over){
       // Add game to the database using service
-
-      // remove match from here
-      active_matches.removeMatch(message)
+        let matchId = message.matchId
+        let result = 0
+        if (message.game_stats.winner === 'w'){
+            result = 1
+        }else if (message.game_stats.winner === 'b'){
+            result = -1
+        }
+        match = {"id": matchId, "result": result}
+        match_serivce.updateMatch(matchId, match).then()
+        // remove match from here
+        active_matches.removeMatch(message)
     }
   });
 
@@ -46,7 +57,9 @@ io.on('connection', function (socket) {
   });
 
   socket.on('init_match', function (match) {
-    status = active_matches.addMatch(match, socket.id)
+      // console.log("INIT_MATCH")
+      status = active_matches.addMatch(match, socket.id)
+      // console.log(status)
     if (Object.keys(status).length == 2){
       // {'player_color':##, last_move={}}
       io.to(status[match.player]).emit('opponent_status', "offline");
@@ -60,15 +73,17 @@ io.on('connection', function (socket) {
       // match started
       io.to(socket.id).emit('restore_match', last_move)
     }
-  })
+    })
 
   socket.on('show_offline', function(match) {
+      // console.log("offline: ", socket.id)
       status = active_matches.removePlayerFromMatch(match)
-      io.to(status[Object.keys(status)[0]]).emit('opponent_status', "offline");
+      // console.log("offline status: ", status)
+      online_p_color = match.player === 'w' ? 'b' : 'w'
+      io.to(status[online_p_color]).emit('opponent_status', "offline");
   })
   
-  // console.log("Socket Connected: ", socket.id)
-
+  console.log("Socket Connected: ", socket.id)
 });
 
 console.log('server started at '+ port)
